@@ -19,34 +19,49 @@ function render(){if(!state.price)return;const d=decision(),p=state.price,t=stat
 function renderLevels(p){const e=C.entryPrice;if(!e){["entry","stop","tp1","tp2","pnl"].forEach(id=>setText(id,"Not set"));return}setText("entry",`$${fmt(e,priceDigits(e))}`);setText("stop",`$${fmt(e*(1-C.stopLossPct/100),priceDigits(e))}`);setText("tp1",`$${fmt(e*(1+C.tp1Pct/100),priceDigits(e))}`);setText("tp2",`$${fmt(e*(1+C.tp2Pct/100),priceDigits(e))}`);const x=(p/e-1)*100;setText("pnl",pct(x));if($("pnl"))$("pnl").className=x>=0?"good":"bad"}
 function drawChart(){const cv=$("chart");if(!cv)return;const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;const ctx=cv.getContext("2d");ctx.scale(d,d);const w=r.width,h=r.height;ctx.clearRect(0,0,w,h);const a=(state.candles["5m"]||[]).slice(-70);if(a.length<2)return;const lo=Math.min(...a.map(x=>x.l)),hi=Math.max(...a.map(x=>x.h)),pad=18,x=i=>pad+i/(a.length-1)*(w-pad*2),y=v=>h-pad-(v-lo)/(hi-lo||1)*(h-pad*2);ctx.strokeStyle="#202836";for(let i=0;i<5;i++){const yy=pad+i*(h-pad*2)/4;ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(w,yy);ctx.stroke()}ctx.beginPath();a.forEach((c,i)=>i?ctx.lineTo(x(i),y(c.c)):ctx.moveTo(x(i),y(c.c)));ctx.strokeStyle="#70a7ff";ctx.lineWidth=2;ctx.stroke()}
 function connect(){
-  const base=C.backendUrl.replace(/\/$/,"");
+  const url=C.backendUrl.replace(/\/$/,"")+"/stream";
 
-  async function poll(){
-    try{
-      const r=await fetch(base+"/api/snapshot?ts="+Date.now(),{
-        cache:"no-store",
-        mode:"cors"
-      });
-      if(!r.ok) throw new Error("HTTP "+r.status);
+  let es;
 
-      const m=await r.json();
-      Object.assign(state,m);
+  function open(){
+    if(es) es.close();
+
+    es=new EventSource(url);
+
+    es.onopen=()=>{
       state.connected=true;
-
       setText("connection","Live");
       if($("dot"))$("dot").style.background="var(--green)";
+    };
 
-      render();
-    }catch(err){
+    es.onmessage=(e)=>{
+      try{
+        const m=JSON.parse(e.data);
+        Object.assign(state,m);
+        state.connected=true;
+        render();
+
+        if($("latency")){
+          setText(
+            "latency",
+            `${Math.max(0,Date.now()-state.lastPacket)}ms`
+          );
+        }
+      }catch(err){
+        console.error("PENGU stream parse error:",err);
+      }
+    };
+
+    es.onerror=()=>{
       state.connected=false;
       setText("connection","Reconnecting…");
       if($("dot"))$("dot").style.background="var(--yellow)";
-      console.error("PENGU backend:",err);
-    }
+      es.close();
+      setTimeout(open,1000);
+    };
   }
 
-  poll();
-  setInterval(poll,1000);
+  open();
 }
 
 connect();
