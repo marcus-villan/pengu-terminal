@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PENGU Terminal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">BITUNIX • FUTURES • LIVE</div>
+        <h1>PENGU <span>/ USDT</span></h1>
+      </div>
+      <div class="status"><i id="dot"></i><span id="connection">Connecting…</span><span class="latency" id="latency">—</span></div>
+    </header>
+
+    <section class="hero grid">
+      <div class="card price-card">
+        <div class="label">LAST PRICE</div>
+        <div class="price" id="price">—</div>
+        <div class="change" id="change">—</div>
+      </div>
+      <div class="card decision-card" id="decisionCard">
+        <div class="label">DECISION ENGINE</div>
+        <div class="decision" id="decision">WAITING</div>
+        <div class="confidence" id="confidence">Waiting for live data…</div>
+      </div>
+      <div class="card compact"><div class="label">24H VOLUME</div><strong id="volume">—</strong><small>USDT</small></div>
+      <div class="card compact"><div class="label">1M FLOW</div><strong id="flow">—</strong><small id="flowSub">buy / sell</small></div>
+    </section>
+
+    <section class="grid main-grid">
+      <div class="card chart-card">
+        <div class="card-head"><div><span class="label">PRICE ACTION</span><h2>5m momentum</h2></div><span class="live-pill">● LIVE</span></div>
+        <canvas id="chart"></canvas>
+      </div>
+      <aside class="card signal-card">
+        <div class="card-head"><div><span class="label">SIGNAL BREAKDOWN</span><h2>What it's seeing</h2></div></div>
+        <div id="signals" class="signals"></div>
+      </aside>
+    </section>
+
+    <section class="grid metrics">
+      <div class="card metric"><span>1m RSI</span><strong id="rsi1">—</strong><small id="rsi1note">—</small></div>
+      <div class="card metric"><span>5m RSI</span><strong id="rsi5">—</strong><small id="rsi5note">—</small></div>
+      <div class="card metric"><span>5m EMA 9</span><strong id="ema9">—</strong><small id="ema9note">—</small></div>
+      <div class="card metric"><span>5m EMA 21</span><strong id="ema21">—</strong><small id="ema21note">—</small></div>
+      <div class="card metric"><span>15m EMA 21</span><strong id="ema15">—</strong><small id="ema15note">—</small></div>
+      <div class="card metric"><span>Volume ratio</span><strong id="volRatio">—</strong><small>vs 20-candle avg</small></div>
+    </section>
+
+    <section class="grid lower">
+      <div class="card levels">
+        <div class="card-head"><div><span class="label">TRADE PLAN</span><h2>Your levels</h2></div></div>
+        <div class="level-row"><span>Entry</span><b id="entry">Not set</b></div>
+        <div class="level-row"><span>Stop</span><b id="stop">Not set</b></div>
+        <div class="level-row"><span>TP1</span><b id="tp1">Not set</b></div>
+        <div class="level-row"><span>TP2</span><b id="tp2">Not set</b></div>
+        <div class="level-row"><span>Unrealized P/L</span><b id="pnl">—</b></div>
+        <p class="muted">Set your entry and position in <code>config.js</code>. This dashboard does not place orders.</p>
+      </div>
+      <div class="card why">
+        <div class="card-head"><div><span class="label">RULES</span><h2>How the decision is formed</h2></div></div>
+        <ul>
+          <li>Trend: 5m EMA9/EMA21 + 15m EMA21</li>
+          <li>Momentum: short-term return and RSI</li>
+          <li>Participation: live trade flow + volume expansion</li>
+          <li>Risk: overbought conditions and trend breaks</li>
+        </ul>
+        <p class="muted">Signals are indicators, not guarantees. Use your own risk limits before trading.</p>
+      </div>
+    </section>
+
+    <footer>Read-only market dashboard • public Bitunix market data • no API key required</footer>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
