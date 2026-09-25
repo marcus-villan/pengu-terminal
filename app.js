@@ -21,18 +21,21 @@ function drawChart(){const cv=$("chart");if(!cv)return;const r=cv.getBoundingCli
 function connect(){
   const base=C.backendUrl.replace(/\/$/,"");
 
-  async function getSnapshot(){
+  async function poll(){
     try{
       const r=await fetch(base+"/api/snapshot?ts="+Date.now(),{
         cache:"no-store",
         mode:"cors"
       });
       if(!r.ok) throw new Error("HTTP "+r.status);
+
       const m=await r.json();
       Object.assign(state,m);
       state.connected=true;
+
       setText("connection","Live");
       if($("dot"))$("dot").style.background="var(--green)";
+
       render();
     }catch(err){
       state.connected=false;
@@ -42,8 +45,8 @@ function connect(){
     }
   }
 
-  getSnapshot();
-  setInterval(getSnapshot,1000);
+  poll();
+  setInterval(poll,1000);
 }
 
 connect();
