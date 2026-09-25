@@ -15,6 +15,24 @@ if(b.rsi>=72){score--;reasons.push(["5m RSI",b.rsi.toFixed(1)+" overbought","war
 if(a.volRatio>=1.5){if(a.ret3>0){score+=2;reasons.push(["Live volume","Buying expansion","good"])}else if(a.ret3<0){score-=2;reasons.push(["Live volume","Selling expansion","bad"])}}
 if(b.ret10>2){score++;reasons.push(["Momentum",pct(b.ret10)+" / 10m","good"])}else if(b.ret10<-2){score--;reasons.push(["Momentum",pct(b.ret10)+" / 10m","bad"])}else reasons.push(["Momentum",pct(b.ret10)+" / 10m","neutral"]);
 let d="HOLD / WATCH",cl="neutral";if(score>=4){d="MOMENTUM UP";cl="good"}else if(score<=-3){d="EXIT RISK";cl="bad"}else if(score<=-1){d="CAUTION";cl="warn"}return{score,d,cl,reasons,a,b,c}}
+let renderTimer=null;
+
+function updateFast(){
+  if(!state.price)return;
+  const p=state.price,t=state.ticker;
+  setText("price",`$${fmt(p,priceDigits(p))}`);
+  setText("change",t?`${pct(Number(t.r))} • 24h range $${fmt(Number(t.l),priceDigits(p))} — $${fmt(Number(t.h),priceDigits(p))}`:"Live");
+  if($("latency"))setText("latency",`${Math.max(0,Date.now()-state.lastPacket)}ms`);
+}
+
+function scheduleRender(){
+  if(renderTimer)return;
+  renderTimer=setTimeout(()=>{
+    renderTimer=null;
+    render();
+  },150);
+}
+
 function render(){if(!state.price)return;const d=decision(),p=state.price,t=state.ticker;setText("price",`$${fmt(p,priceDigits(p))}`);setText("change",t?`${pct(Number(t.r))} • 24h range $${fmt(Number(t.l),priceDigits(p))} — $${fmt(Number(t.h),priceDigits(p))}`:"Live");setText("decision",d.d);if($("decision"))$("decision").className=`decision ${d.cl}`;setText("confidence",`Score ${d.score>=0?"+":""}${d.score} • rule-based signal`);setText("volume",t?Number(t.q).toLocaleString(undefined,{maximumFractionDigits:0}):"—");const buys=state.trades.filter(x=>x.s==="buy").reduce((a,x)=>a+x.v,0),sells=state.trades.filter(x=>x.s==="sell").reduce((a,x)=>a+x.v,0);setText("flow",buys+sells?`${((buys/(buys+sells))*100).toFixed(0)}% buy`:"—");setText("flowSub",`${state.trades.length} recent trades`);setText("rsi1",d.a.rsi.toFixed(1));setText("rsi5",d.b.rsi.toFixed(1));setText("ema9",fmt(d.b.e9,priceDigits(p)));setText("ema21",fmt(d.b.e21,priceDigits(p)));setText("ema15",fmt(d.c.e21,priceDigits(p)));setText("volRatio",`x${d.a.volRatio.toFixed(2)}`);if($("signals"))$("signals").innerHTML=d.reasons.map(x=>`<div class="signal"><span class="name">${x[0]}</span><b class="${x[2]}">${x[1]}</b></div>`).join("");renderLevels(p);drawChart()}
 function renderLevels(p){const e=C.entryPrice;if(!e){["entry","stop","tp1","tp2","pnl"].forEach(id=>setText(id,"Not set"));return}setText("entry",`$${fmt(e,priceDigits(e))}`);setText("stop",`$${fmt(e*(1-C.stopLossPct/100),priceDigits(e))}`);setText("tp1",`$${fmt(e*(1+C.tp1Pct/100),priceDigits(e))}`);setText("tp2",`$${fmt(e*(1+C.tp2Pct/100),priceDigits(e))}`);const x=(p/e-1)*100;setText("pnl",pct(x));if($("pnl"))$("pnl").className=x>=0?"good":"bad"}
 function drawChart(){const cv=$("chart");if(!cv)return;const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;const ctx=cv.getContext("2d");ctx.scale(d,d);const w=r.width,h=r.height;ctx.clearRect(0,0,w,h);const a=(state.candles["5m"]||[]).slice(-70);if(a.length<2)return;const lo=Math.min(...a.map(x=>x.l)),hi=Math.max(...a.map(x=>x.h)),pad=18,x=i=>pad+i/(a.length-1)*(w-pad*2),y=v=>h-pad-(v-lo)/(hi-lo||1)*(h-pad*2);ctx.strokeStyle="#202836";for(let i=0;i<5;i++){const yy=pad+i*(h-pad*2)/4;ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(w,yy);ctx.stroke()}ctx.beginPath();a.forEach((c,i)=>i?ctx.lineTo(x(i),y(c.c)):ctx.moveTo(x(i),y(c.c)));ctx.strokeStyle="#70a7ff";ctx.lineWidth=2;ctx.stroke()}
