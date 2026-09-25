@@ -1,6 +1,6 @@
 window.PENGU_CONFIG = {
   symbol: "PENGUUSDT",
-  backendUrl: "https://REPLACE-WITH-RAILWAY-DOMAIN",
+backendUrl: "https://pengu-api-production.up.railway.app",
   entryPrice: null,
   stopLossPct: 3,
   tp1Pct: 5,
